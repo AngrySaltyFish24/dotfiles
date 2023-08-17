@@ -12,7 +12,7 @@ return {
 		lazy = false,
 		priority = 1000,
 		config = function()
-			vim.cmd([[colorscheme rose-pine-moon]])
+			vim.cmd([[colorscheme rose-pine-dawn]])
 		end,
 	},
 	{
@@ -271,6 +271,9 @@ return {
 			vim.keymap.set("n", "<C-k>", function()
 				ui.nav_file(3)
 			end)
+			vim.keymap.set("n", "<C-l>", function()
+				ui.nav_file(4)
+			end)
 			-- vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
 		end,
 	},
@@ -299,7 +302,7 @@ return {
 					lua = formatters.stylua,
 					python = formatters.shell({ cmd = { "black", "--stdin-filename", "%", "--quiet", "-" } }),
 				},
-				run_with_sh = false,
+				run_with_sh = true,
 			})
 		end,
 	},
@@ -371,6 +374,7 @@ return {
 		lazy = false,
 		config = function()
 			require("gitsigns").setup({
+				current_line_blame_formatter = "<author>, <author_time:%Y-%m-%d> - <summary>",
 				on_attach = function(bufnr)
 					local gs = package.loaded.gitsigns
 
@@ -422,12 +426,83 @@ return {
 					map("n", "<leader>hD", function()
 						gs.diffthis("~")
 					end)
-					map("n", "<leader>td", gs.toggle_deleted)
+					-- map("n", "<leader>td", gs.toggle_deleted)
 
 					-- Text object
 					map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>")
 				end,
 			})
 		end,
+	},
+	{ "tpope/vim-fugitive" },
+	{
+		"pwntester/octo.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-telescope/telescope.nvim",
+			"nvim-tree/nvim-web-devicons",
+		},
+		config = function()
+			require("octo").setup()
+		end,
+	},
+	{
+		"nvim-neotest/neotest",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-treesitter/nvim-treesitter",
+			"antoinemadec/FixCursorHold.nvim",
+
+			"nvim-neotest/neotest-python",
+		},
+		config = function()
+			local neotest = require("neotest")
+			vim.keymap.set("n", "<leader>tt", function()
+				neotest.summary.toggle()
+			end)
+			vim.keymap.set("n", "<leader>tw", function()
+				neotest.watch.toggle("tests")
+			end)
+
+			neotest.setup({
+				adapters = {
+					require("neotest-python")({
+						runner = "pytest",
+						python = "python",
+					}),
+				},
+				highlights = {
+
+					adapter_name = "LspSagaCodeActionTitle",
+					border = "NeotestBorder",
+					dir = "Boolean",
+					failed = "DiffDelete",
+					passed = "DiffAdd",
+					file = "Directory",
+					focused = "TargetWord",
+					indent = "NeotestIndent",
+					marked = "NeotestMarked",
+					namespace = "subtle",
+					running = "NeotestRunning",
+					select_win = "NeotestWinSelect",
+					skipped = "NeotestSkipped",
+					target = "NeotestTarget",
+					test = "NonText",
+					unknown = "NeotestUnknown",
+					watching = "NeotestWatching",
+				},
+			})
+		end,
+	},
+	{
+		"folke/neodev.nvim",
+		opts = {
+			library = {
+				plugins = {
+					"neotest",
+				},
+				types = true,
+			},
+		},
 	},
 }
