@@ -133,23 +133,23 @@ return {
 				vim.keymap.set("n", "<F2>", "<cmd>lua vim.lsp.buf.rename()<cr>", opts)
 				vim.keymap.set("n", "<leader>vca", "<cmd>lua vim.lsp.buf.code_action()<cr>", opts)
 
-				vim.api.nvim_create_autocmd("CursorHold", {
-					callback = function()
-						vim.lsp.buf.document_highlight()
-					end,
-				})
-
-				vim.api.nvim_create_autocmd("CursorHoldI", {
-					callback = function()
-						vim.lsp.buf.document_highlight()
-					end,
-				})
-
-				vim.api.nvim_create_autocmd("CursorMoved", {
-					callback = function()
-						vim.lsp.buf.clear_references()
-					end,
-				})
+				-- vim.api.nvim_create_autocmd("CursorHold", {
+				-- 	callback = function()
+				-- 		vim.lsp.buf.document_highlight()
+				-- 	end,
+				-- })
+				--
+				-- vim.api.nvim_create_autocmd("CursorHoldI", {
+				-- 	callback = function()
+				-- 		vim.lsp.buf.document_highlight()
+				-- 	end,
+				-- })
+				--
+				-- vim.api.nvim_create_autocmd("CursorMoved", {
+				-- 	callback = function()
+				-- 		vim.lsp.buf.clear_references()
+				-- 	end,
+				-- })
 			end)
 
 			lsp.set_server_config({
@@ -167,6 +167,7 @@ return {
 			require("lspconfig").lua_ls.setup(lsp.nvim_lua_ls())
 
 			lsp.ensure_installed("pyright")
+			lsp.ensure_installed("tsserver")
 			lsp.setup()
 		end,
 	},
@@ -181,7 +182,7 @@ return {
 			vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
 			vim.o.foldlevelstart = 99
 			vim.o.foldenable = true
-			vim.o.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]]
+			-- vim.o.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]]
 
 			-- Using ufo provider need remap `zR` and `zM`.
 			vim.keymap.set("n", "zR", require("ufo").openAllFolds)
@@ -301,6 +302,8 @@ return {
 				formatter_by_ft = {
 					lua = formatters.stylua,
 					python = formatters.shell({ cmd = { "black", "--stdin-filename", "%", "--quiet", "-" } }),
+					typescript = formatters.prettierd,
+					typescriptreact = formatters.prettierd,
 				},
 				run_with_sh = true,
 			})
@@ -454,6 +457,7 @@ return {
 			"antoinemadec/FixCursorHold.nvim",
 
 			"nvim-neotest/neotest-python",
+			"nvim-neotest/neotest-jest",
 		},
 		config = function()
 			local neotest = require("neotest")
@@ -461,7 +465,13 @@ return {
 				neotest.summary.toggle()
 			end)
 			vim.keymap.set("n", "<leader>tw", function()
-				neotest.watch.toggle("tests")
+				neotest.watch.toggle()
+			end)
+			vim.keymap.set("n", "<leader>tn", function()
+				neotest.run.run()
+			end)
+			vim.keymap.set("n", "<leader>to", function()
+				neotest.output_panel.toggle()
 			end)
 
 			neotest.setup({
@@ -469,6 +479,9 @@ return {
 					require("neotest-python")({
 						runner = "pytest",
 						python = "python",
+					}),
+					require("neotest-jest")({
+						runner = "npm test --",
 					}),
 				},
 				highlights = {
@@ -505,4 +518,90 @@ return {
 			},
 		},
 	},
+	{
+		"Pocco81/true-zen.nvim",
+		config = function()
+			vim.api.nvim_set_keymap("n", "<leader>z", ":TZMinimalist<CR>", {})
+			local truezen = require("true-zen")
+			truezen.setup({
+				modes = { -- configurations per mode
+					ataraxis = {
+						shade = "dark", -- if `dark` then dim the padding windows, otherwise if it's `light` it'll brighten said windows
+						backdrop = 0, -- percentage by which padding windows should be dimmed/brightened. Must be a number between 0 and 1. Set to 0 to keep the same background color
+						minimum_writing_area = { -- minimum size of main window
+							width = 70,
+							height = 44,
+						},
+						quit_untoggles = true, -- type :q or :qa to quit Ataraxis mode
+						padding = { -- padding windows
+							left = 52,
+							right = 52,
+							top = 0,
+							bottom = 0,
+						},
+						callbacks = { -- run functions when opening/closing Ataraxis mode
+							open_pre = nil,
+							open_pos = nil,
+							close_pre = nil,
+							close_pos = nil,
+						},
+					},
+					minimalist = {
+						ignored_buf_types = { "nofile" }, -- save current options from any window except ones displaying these kinds of buffers
+						options = { -- options to be disabled when entering Minimalist mode
+							number = false,
+							relativenumber = true,
+							showtabline = 0,
+							signcolumn = "no",
+							statusline = "",
+							cmdheight = 1,
+							laststatus = 0,
+							showcmd = false,
+							showmode = false,
+							ruler = false,
+							numberwidth = 1,
+						},
+						callbacks = { -- run functions when opening/closing Minimalist mode
+							open_pre = nil,
+							open_pos = nil,
+							close_pre = nil,
+							close_pos = nil,
+						},
+					},
+					narrow = {
+						--- change the style of the fold lines. Set it to:
+						--- `informative`: to get nice pre-baked folds
+						--- `invisible`: hide them
+						--- function() end: pass a custom func with your fold lines. See :h foldtext
+						folds_style = "informative",
+						run_ataraxis = true, -- display narrowed text in a Ataraxis session
+						callbacks = { -- run functions when opening/closing Narrow mode
+							open_pre = nil,
+							open_pos = nil,
+							close_pre = nil,
+							close_pos = nil,
+						},
+					},
+					focus = {
+						callbacks = { -- run functions when opening/closing Focus mode
+							open_pre = nil,
+							open_pos = nil,
+							close_pre = nil,
+							close_pos = nil,
+						},
+					},
+				},
+				integrations = {
+					tmux = false, -- hide tmux status bar in (minimalist, ataraxis)
+					kitty = { -- increment font size in Kitty. Note: you must set `allow_remote_control socket-only` and `listen_on unix:/tmp/kitty` in your personal config (ataraxis)
+						enabled = true,
+						font = "+3",
+					},
+					twilight = false, -- enable twilight (ataraxis)
+					lualine = false, -- hide nvim-lualine (ataraxis)
+				},
+			})
+		end,
+	},
+	{ "tpope/vim-projectionist", lazy = false },
 }
