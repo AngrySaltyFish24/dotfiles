@@ -1,0 +1,3 @@
+[submodule "zellij/rose-pine"]
+	path = zellij/rose-pine
+	url = https://github.com/rose-pine/zellij.git
